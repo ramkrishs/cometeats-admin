@@ -88,7 +88,7 @@ public class Admin {
 	@POST
 	@Consumes("application/x-www-form-urlencoded")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String addFoodJoint(@FormParam("fjID") Integer fjID,@FormParam("name") String name,
+	public String addFoodJoint(@FormParam("name") String name,
 			@FormParam("open_time") String open_time,@FormParam("close_time") String close_time,@FormParam("wait_time") String wait_time,
 			@FormParam("logo") String logo,@FormParam("chef_total") String chef_total,@FormParam("chef_efficiency") String chef_efficiency,
 			@FormParam("helper_total") String helper_total,@FormParam("helper_efficiency") String helper_efficiency){
@@ -99,7 +99,7 @@ public class Admin {
 		try{
 			
 			FoodJoint foodjoint = new FoodJoint();
-			
+			int fjID = (int) (ms.count() + 1);
 			foodjoint.setFjID(fjID);
 			foodjoint.setName(name);
 			foodjoint.setOpen_time(open_time);
@@ -130,7 +130,7 @@ public class Admin {
 	@Consumes("application/x-www-form-urlencoded")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String updateFoodJoint(@PathParam("id") Integer fjID,@FormParam("name") String name,
-			@FormParam("open_time") String open_time,@FormParam("close_time") String close_time,@FormParam("wait_time") String wait_time,
+			@FormParam("open_time") String open_time,@FormParam("closed_time") String close_time,@FormParam("wait_time") String wait_time,
 			@FormParam("logo") String logo,@FormParam("chef_total") String chef_total,@FormParam("chef_efficiency") String chef_efficiency,
 			@FormParam("helper_total") String helper_total,@FormParam("helper_efficiency") String helper_efficiency){
 		
@@ -225,7 +225,7 @@ public class Admin {
 		try{
 		
 			DBObject obj = new BasicDBObject();
-			
+			obj.put("id", id);
 			obj.put("name", name);
 			obj.put("description", description);
 			obj.put("image", image);
