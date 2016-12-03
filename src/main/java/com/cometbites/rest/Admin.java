@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
+import com.cometbites.db.User;
 import com.cometbites.model.FoodJoint;
 import com.cometbites.model.Item;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -89,13 +90,14 @@ public class Admin {
 	@Consumes("application/x-www-form-urlencoded")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String addFoodJoint(@FormParam("name") String name,
-			@FormParam("open_time") String open_time,@FormParam("close_time") String close_time,@FormParam("wait_time") String wait_time,
+			@FormParam("open_time") String open_time,@FormParam("closed_time") String close_time,@FormParam("wait_time") String wait_time,
 			@FormParam("logo") String logo,@FormParam("chef_total") String chef_total,@FormParam("chef_efficiency") String chef_efficiency,
 			@FormParam("helper_total") String helper_total,@FormParam("helper_efficiency") String helper_efficiency){
 		
 		DBCollection ms = mongoTemplate.getCollection("foodjoints");
 		DBObject res = new BasicDBObject();
 		res.put("result", 401);
+		String jsonvalue = "";
 		try{
 			
 			FoodJoint foodjoint = new FoodJoint();
@@ -112,6 +114,13 @@ public class Admin {
 			foodjoint.setHelper_efficiency(helper_efficiency);
 			
 			mongoTemplate.save(foodjoint);
+			
+			List<FoodJoint> foodJoints = mongoTemplate.findAll(FoodJoint.class);
+			
+			ObjectMapper mapper = new ObjectMapper();
+			
+			jsonvalue = mapper.writeValueAsString(foodJoints);
+			
 			res.put("result", 200);
 		}
 		catch(Exception e){
@@ -121,8 +130,9 @@ public class Admin {
 		
 		
 		
-		return res.toString();
+		return jsonvalue;
 	}
+	
 	
 	//Update FoodJoint
 	@PUT
@@ -160,6 +170,7 @@ public class Admin {
 			
 			mongoTemplate.updateFirst(q,foodjoint,FoodJoint.class);
 			res.put("result", 200);
+			
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -174,17 +185,30 @@ public class Admin {
 	@Path("{id}/menu")
 	@Consumes("application/x-www-form-urlencoded")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String addMenu(@PathParam("id") Integer fjID,@FormParam("menuId") String id,@FormParam("name") String name,@FormParam("description") String description,
+	public String addMenu(@PathParam("id") Integer fjID,@FormParam("name") String name,@FormParam("description") String description,
 			@FormParam("image") String image,@FormParam("price") String price,@FormParam("qty") String qty){
 		
 		DBCollection ms = mongoTemplate.getCollection("foodjoints");
 		DBObject res = new BasicDBObject();
 		res.put("result", 400);
+		Integer id = 0;
 		try{
 		
+			DBObject query1 = new BasicDBObject();
+			query1.put("fjID", fjID);
+			
+			FoodJoint foodjoint = mongoTemplate.findOne(new BasicQuery(query1), FoodJoint.class);
+			
+			if(foodjoint.getMenu() == null || foodjoint.getMenu().size() == 0){
+				id = 1;
+			}
+			else{
+				id = foodjoint.getMenu().size() + 1;
+			}
+			
 			DBObject obj = new BasicDBObject();
 			
-			obj.put("id", id);
+			obj.put("id", Integer.toString(id));
 			obj.put("name", name);
 			obj.put("description", description);
 			obj.put("image", image);
@@ -212,7 +236,7 @@ public class Admin {
 	
 	
 	//Update Menu
-	@POST
+	@PUT
 	@Path("{id}/menu/{mID}")
 	@Consumes("application/x-www-form-urlencoded")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -258,8 +282,7 @@ public class Admin {
 	@Path("{id}/menu/{mID}")
 	@Consumes("application/x-www-form-urlencoded")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String deleteMenu(@PathParam("id") Integer fjID,@PathParam("mID") String id,@FormParam("name") String name,@FormParam("description") String description,
-			@FormParam("image") String image,@FormParam("price") String price,@FormParam("qty") String qty){
+	public String deleteMenu(@PathParam("id") Integer fjID,@PathParam("mID") String id){
 		
 		DBCollection ms = mongoTemplate.getCollection("foodjoints");
 		DBObject res = new BasicDBObject();
@@ -268,16 +291,13 @@ public class Admin {
 		
 			DBObject obj = new BasicDBObject();
 			
-			obj.put("name", name);
-			obj.put("description", description);
-			obj.put("image", image);
-			obj.put("price", price);
-			obj.put("qty", qty);
+			obj.put("id", "1");
+			
 			
 			DBObject query = new BasicDBObject();
 			
 			query.put("fjID", fjID);
-			query.put("menu.id",id );
+			query.put("menu.id","1" );
 			DBObject update = new BasicDBObject();
 			update.put("$pull", new BasicDBObject("menu", obj));
 			
